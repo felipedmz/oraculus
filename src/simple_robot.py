@@ -6,13 +6,16 @@ import statsmodels.api as sm
 import math
 import pickle
 import time
+from datetime import datetime
 
 def compute_quantity(coin_value, invest_value, significant_digits):
     a_number = invest_value/coin_value
     rounded_number =  round(a_number, significant_digits - int(math.floor(math.log10(abs(a_number)))) - 1)
-    return rounded_number.iloc[0]
+    return float(rounded_number.iloc[0])
 
 def feature_eng(df):
+    #print(f'> Feature Eng={df.columns}')
+    
     # Duas variáveis lagged percentual:
     df['lag_1']= 100*df['close'].diff(1)/df['close']
     df['lag_2']= 100*df['close'].diff(2)/df['close']
@@ -28,7 +31,9 @@ def feature_eng(df):
     df = df.drop(columns=cols2drop)
     df = df.dropna()
     df['time'] = df['time']-26038829
-    df = sm.add_constant(df)
+    #df = sm.add_constant(df)
+    
+    #print(f'> [End] Feature Eng Saída={df.columns}')
     return df
 	
 def my_robot(tempo, api: Client):
@@ -54,8 +59,7 @@ def my_robot(tempo, api: Client):
         qtdade = compute_quantity(coin_value = df_last['close'], invest_value = valor_compra_venda, significant_digits = 2)
 
         # Print do datetime atual
-        print('-------------------')
-        print(f"@{pd.to_datetime('now')}")
+        print(f'\n>>>> My Robot @ {datetime.now()}')
 
         if tendencia > 0.02:
             # Modelo detectou uma tendência positiva
@@ -92,4 +96,6 @@ def my_robot(tempo, api: Client):
         # Print do status após cada iteração
         print(api.status())
         count_iter +=1
-        time.sleep(60)
+        print(f'>>>> Aguardando 1 min')
+        time.sleep(60)     
+        
