@@ -3,6 +3,7 @@ from datetime import datetime
 import pandas as pd
 import time
 import json
+import math
 
 class Client:
     url = 'https://mighty-bastion-45199.herokuapp.com'
@@ -83,3 +84,13 @@ class Client:
         }
         response = self.post('/sell', payload)
         return self.parse_response(response)
+
+    # Quanto ainda existe disponível na carteira
+    def how_much_i_have(self, ticker):
+        status = self.status()
+        status_this_coin = status.query(f"ticker == '{ticker}'")
+        if status_this_coin.shape[0] > 0:
+            return status_this_coin['quantity'].iloc[0]
+        else:
+            return 0
+    

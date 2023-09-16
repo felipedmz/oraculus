@@ -1,4 +1,4 @@
-from api import Client
+from src.api import Client
 
 api = Client('dev')
 
