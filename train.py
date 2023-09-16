@@ -3,7 +3,7 @@ import numpy as np
 import statsmodels.api as sm
 import pickle
 from src.simple_robot import feature_eng
-# Baixando os dados de DOGE COIN
+# Baixando os dados de BTC
 df = pd.read_parquet('data/BTC-USDT.parquet')
 
 #### Calculando o target (y)

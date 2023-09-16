@@ -36,9 +36,9 @@ def feature_eng(df):
     #print(f'> [End] Feature Eng Saída={df.columns}')
     return df
 	
-def my_robot(tempo, api: Client):
+def my_robot(api: Client, tempo: int):
     model = pickle.load(open('data/model_dummy.pickle', 'rb'))
-    ticker = 'DOGEUSDT'
+    ticker = 'BTC'
     count_iter = 0
     valor_compra_venda = 10
     
@@ -98,4 +98,3 @@ def my_robot(tempo, api: Client):
         count_iter +=1
         print(f'>>>> Aguardando 1 min')
         time.sleep(60)     
-        
