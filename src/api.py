@@ -13,7 +13,7 @@ class Client:
         print(f'> Inicializando API Client em={env}')
         if env == 'prd':
             self.env = env
-            self.token = ''
+            self.token = 'LKETGE585EOIE5UJG'
         else:
             self.env = 'dev'
             self.token = 'token_dummy_001'
