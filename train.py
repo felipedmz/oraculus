@@ -66,4 +66,4 @@ print(f'MAE_assuming_all_zero={MAE_assuming_all_zero}')
 filename = 'data/model_dummy.pickle'
 pickle.dump(model, open(filename, 'wb'))
 
-
+print(f'\nExport realizado para: {filename}')
