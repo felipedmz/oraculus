@@ -37,14 +37,15 @@ class SimpleRobot:
         df['time'] = df['time']-26038829
         #df = sm.add_constant(df)
         
-        print(f'>>>Feature Eng Saída={df.columns}\n')
+        print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
     
     def train(self):
         print(f'\n>>> Etapa Treinamento')
         
         ### 1) Baixando os dados de BTC
-        df = pd.read_parquet('data/BTC-USDT.parquet')
+        #df = pd.read_parquet('data/BTC-USDT.parquet')
+        df = pd.read_parquet('https://drive.google.com/u/0/uc?id=17c2r9qbnsxPVxaYukrp6vhTY-CQy8WZa&export=download')
 
         ### 2) Calculando o target (y)
         # Calculando qual a média de close dos próximos 10min
