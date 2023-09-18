@@ -1,6 +1,11 @@
 from src.api import Client
-from src.simple_robot import my_robot
+from src.simple_robot import SimpleRobot
 
+# config gerais
 api = Client('dev')
-minutos = 10
-my_robot(api, minutos)
+minutos = 10 # 1 trade a cada 1 min
+
+# Baseline
+simple_robot = SimpleRobot(api)
+simple_robot.train()
+simple_robot.execute(minutos) 

@@ -1,9 +1,6 @@
 import requests
 from datetime import datetime
 import pandas as pd
-import time
-import json
-import math
 
 class Client:
     url = 'https://mighty-bastion-45199.herokuapp.com'
