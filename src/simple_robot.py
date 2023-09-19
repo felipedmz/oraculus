@@ -35,7 +35,6 @@ class SimpleRobot:
         df = df.drop(columns=cols2drop)
         df = df.dropna()
         df['time'] = df['time']-26038829
-        #df = sm.add_constant(df)
         
         print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
