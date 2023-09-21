@@ -83,9 +83,9 @@ class Client:
         return self.parse_response(response)
 
     # Quanto ainda existe disponível na carteira
-    def how_much_i_have(self, ticker):
+    def how_much_i_have(self):
         status = self.status()
-        status_this_coin = status.query(f"ticker == '{ticker}'")
+        status_this_coin = status.query(f"ticker == 'BTC'")
         if status_this_coin.shape[0] > 0:
             return status_this_coin['quantity'].iloc[0]
         else:

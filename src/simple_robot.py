@@ -11,17 +11,15 @@ import time
 
 class SimpleRobot:
     train_filename = 'data/simple_robot.pickle'
-    api = None
     
     # common
+    api = None
     time = 0
     current_execution = 0
     #
     def __init__(self, api: Client):
         print(f'\n>>> Inicializando')
         self.api = api
-        print(f'...... time = {self.time}')
-        print(f'...... current_execution = {self.current_execution}')
         
     def check_execution(self) -> bool:
         return self.current_execution < self.time
@@ -139,8 +137,6 @@ class SimpleRobot:
         print(f'\n>>> Realizando trades')
         
         model = pickle.load(open(self.train_filename, 'rb'))
-        ticker = 'BTC'
-        count_iter = 0
         valor_compra_venda = 10
         
         while self.check_execution():
@@ -167,7 +163,7 @@ class SimpleRobot:
                 print(f"Tendência positiva de {str(tendencia)}")
 
                 # Verifica quanto dinheiro tem em caixa
-                qtdade_money = self.api.how_much_i_have(ticker)
+                qtdade_money = self.api.how_much_i_have()
 
                 if qtdade_money>0:
                     # Se tem dinheiro, tenta comprar o equivalente a qtdade ou o máximo que o dinheiro permitir
@@ -175,7 +171,7 @@ class SimpleRobot:
                     qtdade = min(qtdade, max_qtdade)
 
                     # Realizando a compra
-                    print(f'Comprando {str(qtdade)} {ticker}')
+                    print(f'Comprando {str(qtdade)} BTC')
                     self.api.buy(qtdade)
 
             elif tendencia < -0.02:
@@ -183,12 +179,12 @@ class SimpleRobot:
                 print(f"Tendência negativa de {str(tendencia)}")
 
                 # Verifica quanto tem da moeda em caixa
-                qtdade_coin = self.api.how_much_i_have(ticker)
+                qtdade_coin = self.api.how_much_i_have()
 
                 if qtdade_coin>0:
                     # Se tenho a moeda, vou vender!
                     qtdade = min(qtdade_coin, qtdade)
-                    print(f'Vendendo {str(qtdade)} {ticker}')
+                    print(f'Vendendo {str(qtdade)} BTC')
                     self.api.sell(qtdade)
             else:
                 # Não faz nenhuma ação, espera próximo loop
