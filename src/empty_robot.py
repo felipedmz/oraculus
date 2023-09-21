@@ -56,7 +56,7 @@ class EmptyRobot:
         print(f'\n>>> Realizando trades')
         
         # carregando o aprendizado do modelo
-        # model = pickle.load(open(self.train_filename, 'rb'))
+        #model = pickle.load(open(self.train_filename, 'rb'))
         ticker = 'BTC'        
         while self.check_execution():
             # seu codigo
