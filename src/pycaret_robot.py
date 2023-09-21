@@ -50,9 +50,9 @@ class PycaretRobot:
         df['value_variation'] = df['close'].diff().fillna(0)
         # date features
         df['datetime'] = pd.to_datetime(df['datetime'])
-        df['year'] = df['datetime'].dt.strftime('%Y')
-        df['month'] = df['datetime'].dt.strftime('%m')
-        df['day'] = df['datetime'].dt.strftime("%d")
+        df['year'] = df['datetime'].dt.strftime('%Y').astype('int')
+        df['month'] = df['datetime'].dt.strftime('%m').astype('int')
+        df['day'] = df['datetime'].dt.strftime("%d").astype('int')
         df['hour'] = df['datetime'].dt.strftime('%H')
         df['minute'] = df['datetime'].dt.strftime('%M')
         df['week_day'] = df['datetime'].dt.strftime('%A')
@@ -115,10 +115,9 @@ class PycaretRobot:
         df = self.feature_eng(df)
         df.to_csv(self.temp_feat_filename, index=False)
         print(f'... debug de features salvo em = {self.temp_feat_filename}')
-        sys.exit(1)
         # init setup
         print('... setup')
-        exp = setup(data=df, target=df['value_variation'])
+        exp = setup(data=df, target='value_variation', train_size = 0.8, fold_shuffle=True, session_id=2)
         # compare models
         print('... compare models')
         best_model = compare_models()
