@@ -11,12 +11,12 @@ import math
 import pickle
 import time
 
-from pycaret.datasets import get_data
 from pycaret.classification import *
+from hurst import compute_Hc
 
 class PycaretRobot:
     train_filename = 'data/pycaret_best.pickle'
-
+    temp_feat_filename = 'data/temp.features.csv'
     # common
     api = None
     time = 0
@@ -36,58 +36,112 @@ class PycaretRobot:
         time.sleep(60)
     # [end] common
         
+    def calculate_hurst(self, subset: pd.DataFrame):
+        data = subset.values
+        H, c, data = compute_Hc(data, kind='random_walk')
+        return H    
+        
     def feature_eng(self, df):
         print(f'\n>>> Feature Eng Entrada={df.columns}')
-        
-        # seu codigo
-        # dia, hora, dia da semana
-        # hurst
-        df['datetime'] = pd.to_datetime(df['datetime'])
-        df['date'] = df['datetime_original'].dt.date
-        df['time'] = df['datetime_original'].dt.strftime('%H:%M:%S')
-        df['week_day'] = df['datetime_original'].dt.strftime('%A')
-        df.drop(columns=['datetime'], inplace=True)
-               
-        #df['hurst'] = pd.to_datetime(df['datetime'])
         #
-        df['forward_average'] = df[::-1]['close'].rolling(10).mean()[::-1].shift(-1)
-        df['target'] = 100*(df['forward_average'] - df['close']) / df['close']
-        
+        last_update = df['datetime'].max()
+        print(f'... Trabalhando a partir dos dados de {last_update}')
+        # target column
+        df['value_variation'] = df['close'].diff().fillna(0)
+        # date features
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['year'] = df['datetime'].dt.strftime('%Y')
+        df['month'] = df['datetime'].dt.strftime('%m')
+        df['day'] = df['datetime'].dt.strftime("%d")
+        df['hour'] = df['datetime'].dt.strftime('%H')
+        df['minute'] = df['datetime'].dt.strftime('%M')
+        df['week_day'] = df['datetime'].dt.strftime('%A')
+        df.drop(columns=['datetime'], inplace=True)
+        # coeficients
+        df['traded_volume'] = df['number_of_trades'] / df['volume']
+        df['amplitude'] = df['high'] / df['low']
+        df['candle'] = df['close'] / df['open']
+        #
+        """
+        new columns with Hurst Statistics
+        @see: https://en.wikipedia.org/wiki/Hurst_exponent
+        """
+        rowsCount = len(df)
+        #
+        h_value_variation = np.zeros(rowsCount)
+        for r in range(rowsCount):
+            if (r > 100):
+                lasts = df.loc[r-100:r, ['value_variation']].copy()
+                h = self.calculate_hurst(lasts)
+                h_value_variation[r] = h
+        df['h_value_variation'] = h_value_variation
+        #
+        h_traded_volume = np.zeros(rowsCount)
+        for r in range(rowsCount):
+            if (r > 100):
+                lasts = df.loc[r-100:r, ['traded_volume']].copy()
+                h = self.calculate_hurst(lasts)
+                h_traded_volume[r] = h
+        df['h_traded_volume'] = h_value_variation
+        #
+        h_amplitude = np.zeros(rowsCount)
+        for r in range(rowsCount):
+            if (r > 100):
+                lasts = df.loc[r-100:r, ['amplitude']].copy()
+                h = self.calculate_hurst(lasts)
+                h_amplitude[r] = h
+        df['h_amplitude'] = h_value_variation
+        #
+        h_candle = np.zeros(rowsCount)
+        for r in range(rowsCount):
+            if (r > 100):
+                lasts = df.loc[r-100:r, ['candle']].copy()
+                h = self.calculate_hurst(lasts)
+                h_amplitude[r] = h
+        df['h_candle'] = h_candle
+        """
+        [end] Hurst Statistics
+        """
+        # filter
+        df = df[df['h_value_variation'] > 0]
         print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
     
     def train(self):
         print(f'\n>>> Etapa Treinamento')
-        
+        # 
+        print(f'... carregando treinamento')
         df = pd.read_csv('data/quotation.csv')
         df = self.feature_eng(df)
-        df.head(5)
-        
+        df.to_csv(self.temp_feat_filename, index=False)
+        print(f'... debug de features salvo em = {self.temp_feat_filename}')
+        sys.exit(1)
         # init setup
         print('... setup')
-        clf1 = setup(data = df, target = 'Class variable')
-        print(clf1)
-
+        exp = setup(data=df, target=df['value_variation'])
         # compare models
-        print('... compare_models')
-        best = compare_models()
-        print(best)
-        
-        sys.exit(1)
-        
-        # para salvar o modelo       
-        #pickle.dump(model, open(self.train_filename, 'wb'))
-        
+        print('... compare models')
+        best_model = compare_models()
+        print('... best model')
+        print(best_model)
+        final_model = create_model(best_model)
+        # metrics
+        print('\n>>> Avaliação de modelo')
+        evaluate_model(final_model)
+        # para salvar o modelo
+        save_model(final_model, self.train_filename)
         print(f'\n>>> Export realizado para: {self.train_filename}')
         
-    def execute(self, time: int):
+    def setTime(self, time):
         self.time = time
-        print(f'\n>>> Realizando trades')
         
+    def execute(self, time: int):
+        self.setTime(time)
+        print(f'\n>>> Realizando trades')
         # carregando o aprendizado do modelo
-        #model = pickle.load(open(self.train_filename, 'rb'))
-        ticker = 'BTC'        
+        model = load_model(self.train_filename)
+        last_ocurrencies = self.api.cripto_quotation()
         while self.check_execution():
-            # seu codigo
-            #
+            predictions = predict_model(model, data=last_ocurrencies)
+            print(predictions)
             self.await_next_iteraction()
