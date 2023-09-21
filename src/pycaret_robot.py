@@ -59,8 +59,8 @@ class PycaretRobot:
         df.drop(columns=['datetime'], inplace=True)
         # coeficients
         df['traded_volume'] = df['number_of_trades'] / df['volume']
-        df['amplitude'] = df['high'] / df['low']
-        df['candle'] = df['close'] / df['open']
+        df['amplitude'] = df['high'] - df['low']
+        df['candle'] = df['close'] - df['open']
         #
         """
         new columns with Hurst Statistics
