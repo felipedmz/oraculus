@@ -1,4 +1,4 @@
-# @usage: from src.empty_robot import EmptyRobot
+import sys
 
 from src.api import Client
 from datetime import datetime
@@ -11,8 +11,11 @@ import math
 import pickle
 import time
 
+from pycaret.datasets import get_data
+from pycaret.classification import *
+
 class PycaretRobot:
-    train_filename = 'data/ALTERAR.pickle'
+    train_filename = 'data/pycaret_best.pickle'
 
     # common
     api = None
@@ -20,7 +23,7 @@ class PycaretRobot:
     current_execution = 0
     #
     def __init__(self, api: Client):
-        print(f'\n>>> Este é um robo vazio para você usar de modelo')
+        print(f'\n>>> PycaretRobot')
         self.api = api
         
     def check_execution(self) -> bool:
@@ -37,6 +40,18 @@ class PycaretRobot:
         print(f'\n>>> Feature Eng Entrada={df.columns}')
         
         # seu codigo
+        # dia, hora, dia da semana
+        # hurst
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['date'] = df['datetime_original'].dt.date
+        df['time'] = df['datetime_original'].dt.strftime('%H:%M:%S')
+        df['week_day'] = df['datetime_original'].dt.strftime('%A')
+        df.drop(columns=['datetime'], inplace=True)
+               
+        #df['hurst'] = pd.to_datetime(df['datetime'])
+        #
+        df['forward_average'] = df[::-1]['close'].rolling(10).mean()[::-1].shift(-1)
+        df['target'] = 100*(df['forward_average'] - df['close']) / df['close']
         
         print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
@@ -44,10 +59,21 @@ class PycaretRobot:
     def train(self):
         print(f'\n>>> Etapa Treinamento')
         
-        # seu codigo
-        #chamando a feature engineering
-        #df = self.feature_eng(df)
-        #df.head(5)
+        df = pd.read_csv('data/quotation.csv')
+        df = self.feature_eng(df)
+        df.head(5)
+        
+        # init setup
+        print('... setup')
+        clf1 = setup(data = df, target = 'Class variable')
+        print(clf1)
+
+        # compare models
+        print('... compare_models')
+        best = compare_models()
+        print(best)
+        
+        sys.exit(1)
         
         # para salvar o modelo       
         #pickle.dump(model, open(self.train_filename, 'wb'))
