@@ -13,9 +13,25 @@ class SimpleRobot:
     train_filename = 'data/simple_robot.pickle'
     api = None
     
+    # common
+    time = 0
+    current_execution = 0
+    #
     def __init__(self, api: Client):
         print(f'\n>>> Inicializando')
         self.api = api
+        print(f'...... time = {self.time}')
+        print(f'...... current_execution = {self.current_execution}')
+        
+    def check_execution(self) -> bool:
+        return self.current_execution < self.time
+    
+    def await_next_iteraction(self): 
+        print(self.api.status())
+        self.current_execution +=1
+        print(f'...... Aguardando 1 min')
+        time.sleep(60)
+    # [end] common
         
     def feature_eng(self, df):
         print(f'\n>>> Feature Eng Entrada={df.columns}')
@@ -43,8 +59,8 @@ class SimpleRobot:
         print(f'\n>>> Etapa Treinamento')
         
         ### 1) Baixando os dados de BTC
-        #df = pd.read_parquet('data/BTC-USDT.parquet')
-        df = pd.read_parquet('https://drive.google.com/u/0/uc?id=17c2r9qbnsxPVxaYukrp6vhTY-CQy8WZa&export=download')
+        df = pd.read_parquet('data/BTC-USDT.parquet')
+        #df = pd.read_parquet('https://drive.google.com/u/0/uc?id=17c2r9qbnsxPVxaYukrp6vhTY-CQy8WZa&export=download')
 
         ### 2) Calculando o target (y)
         # Calculando qual a média de close dos próximos 10min
@@ -115,9 +131,11 @@ class SimpleRobot:
     def compute_quantity(self, coin_value, invest_value, significant_digits):
         a_number = invest_value/coin_value
         rounded_number =  round(a_number, significant_digits - int(math.floor(math.log10(abs(a_number)))) - 1)
+        print(f"rounded_number={rounded_number}")
         return float(rounded_number.iloc[0])
         
-    def execute(self, tempo: int):
+    def execute(self, time: int):
+        self.time = time
         print(f'\n>>> Realizando trades')
         
         model = pickle.load(open(self.train_filename, 'rb'))
@@ -125,7 +143,7 @@ class SimpleRobot:
         count_iter = 0
         valor_compra_venda = 10
         
-        while count_iter < tempo:
+        while self.check_execution():
             # Pegando o OHLC dos últimos 500 minutos
             df = self.api.cripto_quotation()
 
@@ -142,7 +160,7 @@ class SimpleRobot:
             qtdade = self.compute_quantity(coin_value = df_last['close'], invest_value = valor_compra_venda, significant_digits = 2)
 
             # Print do datetime atual
-            print(f'\n...... My Robot @ {datetime.now()}')
+            print(f'\n...... SimpleRobot @ {datetime.now()}')
 
             if tendencia > 0.02:
                 # Modelo detectou uma tendência positiva
@@ -175,9 +193,5 @@ class SimpleRobot:
             else:
                 # Não faz nenhuma ação, espera próximo loop
                 print(f"Tendência neutra de {str(tendencia)}. Nenhuma ação realizada")
-
-            # Print do status após cada iteração e sleep de 1 min
-            print(self.api.status())
-            count_iter +=1
-            print(f'...... Aguardando 1 min')
-            time.sleep(60)
+            #
+            self.await_next_iteraction()
