@@ -40,6 +40,26 @@ class PycaretRobot:
         data = subset.values
         H, c, data = compute_Hc(data, kind='random_walk')
         return H    
+    
+    def attrib_result_class(self, value):
+        category = None
+        if (value > 10):
+            category = 'positive_strong'
+        elif(value > 5 and value <= 10):
+            category = 'positive'
+        elif(value > 0 and value <= 5):
+            category = 'positive_soft'
+        elif(value == 0):
+            category = 'no_variation'
+        elif(value < -10):
+            category = 'negative_strong'
+        elif(value < -5 and value >= -10):
+            category = 'negative'
+        elif(value < 0 and value >= -5):
+            category = 'negative_soft'
+        else:
+            category = 'no_category'
+        return category
         
     def feature_eng(self, df):
         print(f'\n>>> Feature Eng Entrada={df.columns}')
@@ -48,6 +68,7 @@ class PycaretRobot:
         print(f'... Trabalhando a partir dos dados de {last_update}')
         # target column
         df['value_variation'] = df['close'].diff().fillna(0)
+        df['value_class'] = df['value_variation'].apply(self.attrib_result_class)
         # date features
         df['datetime'] = pd.to_datetime(df['datetime'])
         df['year'] = df['datetime'].dt.strftime('%Y').astype('int')
@@ -82,7 +103,7 @@ class PycaretRobot:
                 lasts = df.loc[r-100:r, ['traded_volume']].copy()
                 h = self.calculate_hurst(lasts)
                 h_traded_volume[r] = h
-        df['h_traded_volume'] = h_value_variation
+        df['h_traded_volume'] = h_traded_volume
         #
         h_amplitude = np.zeros(rowsCount)
         for r in range(rowsCount):
@@ -90,14 +111,14 @@ class PycaretRobot:
                 lasts = df.loc[r-100:r, ['amplitude']].copy()
                 h = self.calculate_hurst(lasts)
                 h_amplitude[r] = h
-        df['h_amplitude'] = h_value_variation
+        df['h_amplitude'] = h_amplitude
         #
         h_candle = np.zeros(rowsCount)
         for r in range(rowsCount):
             if (r > 100):
                 lasts = df.loc[r-100:r, ['candle']].copy()
                 h = self.calculate_hurst(lasts)
-                h_amplitude[r] = h
+                h_candle[r] = h
         df['h_candle'] = h_candle
         """
         [end] Hurst Statistics
@@ -117,7 +138,13 @@ class PycaretRobot:
         print(f'... debug de features salvo em = {self.temp_feat_filename}')
         # init setup
         print('... setup')
-        exp = setup(data=df, target='value_variation', train_size = 0.8, fold_shuffle=True, session_id=2)
+        exp = setup(
+            data=df,
+            target='value_class',
+            train_size = 0.8,
+            fold_shuffle=True,
+            session_id=123
+        )
         # compare models
         print('... compare models')
         best_model = compare_models()
@@ -140,7 +167,8 @@ class PycaretRobot:
         # carregando o aprendizado do modelo
         model = load_model(self.train_filename)
         last_ocurrencies = self.api.cripto_quotation()
+        df = self.feature_eng(last_ocurrencies)
         while self.check_execution():
-            predictions = predict_model(model, data=last_ocurrencies)
+            predictions = predict_model(model, data=df)
             print(predictions)
             self.await_next_iteraction()
