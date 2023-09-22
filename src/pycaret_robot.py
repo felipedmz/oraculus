@@ -168,9 +168,10 @@ class PycaretRobot:
         model = load_model(self.train_filename)
         last_ocurrencies = self.api.cripto_quotation()
         last_ocurrencies = last_ocurrencies.sort_values(by='datetime', ascending=False)
-        to_predict = last_ocurrencies.iloc[0].to_frame()
-        to_predict = self.feature_eng(to_predict)
-        to_predict.drop(columns=['value_class'], inplace=True)       
+        #to_predict = last_ocurrencies.iloc[0:1]
+        to_predict = self.feature_eng(last_ocurrencies)
+        to_predict.drop(columns=['value_class'], inplace=True)   
+        to_predict['value_class'] = ''
         #
         while self.check_execution():
             predictions = predict_model(model, data=to_predict)
