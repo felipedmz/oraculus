@@ -14,8 +14,8 @@ simple_robot.execute(minutos)
 
 # Baseline
 best_selector = PycaretRobot(api)
-best_selector.train()
-#simple_robot.execute(minutos)
+#best_selector.train()
+best_selector.execute(minutos)
 
 """ Estrategia a ser seguida
 
