@@ -17,6 +17,7 @@ from hurst import compute_Hc
 class PycaretRobot:
     train_filename = 'data/pycaret_best.pickle'
     temp_feat_filename = 'data/temp.features.csv'
+    temp_pred_filename = 'data/temp.predictions.csv'
     # common
     api = None
     time = 0
@@ -176,13 +177,11 @@ class PycaretRobot:
         print(f'\n>>> Realizando trades')
         # carregando o aprendizado do modelo
         model = load_model(self.train_filename)
-        last_ocurrencies = self.api.cripto_quotation()
-        to_predict = self.feature_eng(last_ocurrencies)
-        to_predict.drop(columns=['value_class'], inplace=True)   
-        to_predict['value_class'] = None
-        print(f'... Prevendo as ultimas {len(to_predict)} ocorrencias...')
         #
         while self.check_execution():
+            last_ocurrencies = self.api.cripto_quotation()
+            to_predict = self.feature_eng(last_ocurrencies)
+            print(f'... Prevendo as ultimas {len(to_predict)} ocorrencias...')
             predictions = predict_model(model, data=to_predict)
-            print(predictions)
+            predictions.to_csv(self.temp_pred_filename, index=False)            
             self.await_next_iteraction()
