@@ -134,7 +134,7 @@ class PycaretRobot:
         [end] Hurst Statistics
         """
         # filter
-        df = df[df['h_value_variation'] != 0]
+        df = df[df['h_value_variation'] == 0]
         print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
     
