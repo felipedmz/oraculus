@@ -134,7 +134,7 @@ class PycaretRobot:
         [end] Hurst Statistics
         """
         # filter
-        df = df[df['h_value_variation'] > 0]
+        df = df[df['h_value_variation'] != 0]
         print(f'>>> Feature Eng Saída={df.columns}\n')
         return df
     
@@ -180,6 +180,7 @@ class PycaretRobot:
         to_predict = self.feature_eng(last_ocurrencies)
         to_predict.drop(columns=['value_class'], inplace=True)   
         to_predict['value_class'] = None
+        print(f'... Prevendo as ultimas {len(to_predict)} ocorrencias...')
         #
         while self.check_execution():
             predictions = predict_model(model, data=to_predict)
