@@ -36,10 +36,19 @@ class PycaretRobot:
         time.sleep(60)
     # [end] common
         
+    """
     def calculate_hurst(self, subset: pd.DataFrame):
         data = subset.values
         H, c, data = compute_Hc(data, kind='random_walk')
-        return H    
+        return H
+    """
+    
+    def calculate_hurst(self, column):
+        column = column.values  # Converte a coluna para um array numpy
+        lags = range(2, len(column) // 2)  # Define os tamanhos de janela
+        tau = [np.std(np.subtract(column[lag:], column[:-lag])) for lag in lags]
+        h = np.polyfit(np.log(lags), np.log(tau), 1)[0]
+        return h 
     
     def attrib_result_class(self, value):
         category = None
@@ -88,35 +97,36 @@ class PycaretRobot:
         @see: https://en.wikipedia.org/wiki/Hurst_exponent
         """
         rowsCount = len(df)
+        df.reset_index(drop=True, inplace=True)
         #
         h_value_variation = np.zeros(rowsCount)
         for r in range(rowsCount):
-            if (r > 100):
-                lasts = df.loc[r-100:r, ['value_variation']].copy()
+            if (r >= 10):
+                lasts = df.loc[r-10:r, ['value_variation']].copy()
                 h = self.calculate_hurst(lasts)
                 h_value_variation[r] = h
         df['h_value_variation'] = h_value_variation
         #
         h_traded_volume = np.zeros(rowsCount)
         for r in range(rowsCount):
-            if (r > 100):
-                lasts = df.loc[r-100:r, ['traded_volume']].copy()
+            if (r >= 10):
+                lasts = df.loc[r-10:r, ['traded_volume']].copy()
                 h = self.calculate_hurst(lasts)
                 h_traded_volume[r] = h
         df['h_traded_volume'] = h_traded_volume
         #
         h_amplitude = np.zeros(rowsCount)
         for r in range(rowsCount):
-            if (r > 100):
-                lasts = df.loc[r-100:r, ['amplitude']].copy()
+            if (r >= 10):
+                lasts = df.loc[r-10:r, ['amplitude']].copy()
                 h = self.calculate_hurst(lasts)
                 h_amplitude[r] = h
         df['h_amplitude'] = h_amplitude
         #
         h_candle = np.zeros(rowsCount)
         for r in range(rowsCount):
-            if (r > 100):
-                lasts = df.loc[r-100:r, ['candle']].copy()
+            if (r >= 10):
+                lasts = df.loc[r-10:r, ['candle']].copy()
                 h = self.calculate_hurst(lasts)
                 h_candle[r] = h
         df['h_candle'] = h_candle
@@ -167,11 +177,9 @@ class PycaretRobot:
         # carregando o aprendizado do modelo
         model = load_model(self.train_filename)
         last_ocurrencies = self.api.cripto_quotation()
-        last_ocurrencies = last_ocurrencies.sort_values(by='datetime', ascending=False)
-        #to_predict = last_ocurrencies.iloc[0:1]
         to_predict = self.feature_eng(last_ocurrencies)
         to_predict.drop(columns=['value_class'], inplace=True)   
-        to_predict['value_class'] = ''
+        to_predict['value_class'] = None
         #
         while self.check_execution():
             predictions = predict_model(model, data=to_predict)

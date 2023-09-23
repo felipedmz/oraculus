@@ -12,7 +12,7 @@ simple_robot.train()
 simple_robot.execute(minutos)
 """
 
-# Baseline
+# Best Model Selector
 best_selector = PycaretRobot(api)
 #best_selector.train()
 best_selector.execute(minutos)
