@@ -21,6 +21,7 @@ class PycaretRobot:
     api = None
     time = 0
     current_execution = 0
+    value_per_trade = 15
     #
     def __init__(self, api: Client):
         print(f'\n>>> PycaretRobot')
@@ -194,6 +195,12 @@ class PycaretRobot:
     def setTime(self, time):
         self.time = time
         
+    def compute_quantity(self, coin_value, invest_value, significant_digits):
+        a_number = invest_value/coin_value
+        rounded_number =  round(a_number, significant_digits - int(math.floor(math.log10(abs(a_number)))) - 1)
+        print(f"rounded_number={rounded_number}")
+        return float(rounded_number.iloc[0])
+
     def execute(self, time: int):
         self.setTime(time)
         print(f'\n>>> Realizando trades')
@@ -213,5 +220,45 @@ class PycaretRobot:
             predictions = predict_model(model, data=to_predict)
             # salvando arquivo temporario com as previsoes
             predictions.to_csv(self.temp_pred_filename, index=False)
+            """
+            acao de trade baseado na ULTIMA PREVISAO
+            """
+            last = predictions.iloc[-1]
+            last_prediction = last['prediction_label']
+            action = None
+            if 'positive' in last_prediction:
+                action = 'buy'
+            elif 'negative' in last_prediction:
+                action = 'sell'
+            else:
+                action = 'no_action'
+            print(f'... last_prediction={last_prediction} -> ACTION= {action}')
+            #
+            value_in_trade = self.value_per_trade # !!!
+            portfolio = self.api.how_much_i_have()
+            #
+            qty_to_trade = self.compute_quantity(
+                coin_value = last['close'],
+                invest_value = value_in_trade,
+                significant_digits = 2
+            )
+            max_qty_to_trade = self.compute_quantity(
+                coin_value = last['close'],
+                invest_value = portfolio,
+                significant_digits = 2
+            )
+            if portfolio < 1:
+                print(f'>>> Sem fundos disponiveis -> SKIPPING')
+            else:
+                if action == 'buy' :
+                    # buy
+                    to_buy = min(qty_to_trade, max_qty_to_trade)
+                    print(f'>>> Comprando {to_buy} BTC')
+                    self.api.buy(to_buy)
+                elif action == 'sell':
+                    # sell
+                    to_sell = min(portfolio, qty_to_trade)
+                    print(f'>>> Vendendo {to_sell} BTC')
+                    self.api.sell(to_sell)
             #
             self.await_next_iteraction()
