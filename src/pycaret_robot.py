@@ -12,7 +12,6 @@ import pickle
 import time
 
 from pycaret.classification import *
-from hurst import compute_Hc
 
 class PycaretRobot:
     train_filename = 'data/pycaret_best.pickle'
@@ -36,13 +35,6 @@ class PycaretRobot:
         print(f'...... Aguardando 1 min')
         time.sleep(60)
     # [end] common
-        
-    """
-    def calculate_hurst(self, subset: pd.DataFrame):
-        data = subset.values
-        H, c, data = compute_Hc(data, kind='random_walk')
-        return H
-    """
     
     def calculate_hurst(self, column):
         column = column.values  # Converte a coluna para um array numpy
@@ -94,7 +86,7 @@ class PycaretRobot:
         df['candle'] = df['close'] - df['open']
         #
         """
-        new columns with Hurst Statistics
+        novas colunas usando o expoente de Hurst
         @see: https://en.wikipedia.org/wiki/Hurst_exponent
         """
         rowsCount = len(df)
