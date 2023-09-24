@@ -129,6 +129,8 @@ class PycaretRobot:
         # filter
         df = df[df['h_value_variation'] != 0]
         print(f'>>> Feature Eng Saída={df.columns}\n')
+        df.to_csv(self.temp_feat_filename, index=False)
+        #
         return df
     
     def train(self):
@@ -137,7 +139,6 @@ class PycaretRobot:
         print(f'... carregando treinamento')
         df = pd.read_csv('data/quotation.csv')
         df = self.feature_eng(df)
-        df.to_csv(self.temp_feat_filename, index=False)
         print(f'... debug de features salvo em = {self.temp_feat_filename}')
         # init setup
         print('... setup')
