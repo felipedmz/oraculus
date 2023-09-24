@@ -4,7 +4,7 @@ from src.pycaret_robot import PycaretRobot
 
 # config gerais
 api = Client('dev')
-minutos = 1 # trade a cada 1 min
+minutos = 30 # trade a cada 1 min
 
 """ Baseline
 simple_robot = SimpleRobot(api)
@@ -16,4 +16,3 @@ simple_robot.execute(minutos)
 best_selector = PycaretRobot(api)
 #best_selector.train()
 best_selector.execute(minutos)
-
