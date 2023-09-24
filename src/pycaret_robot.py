@@ -65,13 +65,30 @@ class PycaretRobot:
         
     def feature_eng(self, df):
         print(f'\n>>> Feature Eng Entrada={df.columns}')
+        rowsCount = len(df)
         #
         last_update = df['datetime'].max()
         print(f'... Trabalhando a partir dos dados de {last_update}')
-        # target column
+        """
+        calculando a variacao entre as linhas
+        """
         df['value_variation'] = df['close'].diff().fillna(0)
-        df['value_class'] = df['value_variation'].apply(self.attrib_result_class)
-        # date features
+        """
+        target column
+        - baseado no valor anterior definimos uma classe de previsao
+        - essa classe ditara o comportamento do robo de trade
+        """
+        value_class = np.empty(rowsCount, dtype='object')
+        for r in range(rowsCount):
+            if (r >= 1):
+                previous_variation = df.loc[r-1, ['value_variation']].copy()
+                value_class[r] = self.attrib_result_class(previous_variation[0])
+        df['value_class'] = value_class
+        """
+        date features:
+        - separamos dia mes e ano, dia da semana
+        - ajustados os tipos de dados
+        """
         df['datetime'] = pd.to_datetime(df['datetime'])
         df['year'] = df['datetime'].dt.strftime('%Y').astype('int')
         df['month'] = df['datetime'].dt.strftime('%m').astype('int')
@@ -80,16 +97,24 @@ class PycaretRobot:
         df['minute'] = df['datetime'].dt.strftime('%M')
         df['week_day'] = df['datetime'].dt.strftime('%A')
         df.drop(columns=['datetime'], inplace=True)
-        # coeficients
+        """
+        coeficients features
+        - razao entre o volume traded e disponivel
+        - amplitude de variacao high-low
+        - "candle" abstraido como a diferenca entre open-close
+        """
         df['traded_volume'] = df['number_of_trades'] / df['volume']
         df['amplitude'] = df['high'] - df['low']
         df['candle'] = df['close'] - df['open']
         #
         """
-        novas colunas usando o expoente de Hurst
+        features usando o expoente de Hurst
         @see: https://en.wikipedia.org/wiki/Hurst_exponent
+        - o hurst carrega a memoria da serie temporal
+        - tambem usado como medida de aletoriedade
+        - criado indicador hurst para variacao, volume, amplitude e candle
+        - hurst de cada linha calculado usando as 10 (dez) linhas anteriores
         """
-        rowsCount = len(df)
         df.reset_index(drop=True, inplace=True)
         #
         h_value_variation = np.zeros(rowsCount)
