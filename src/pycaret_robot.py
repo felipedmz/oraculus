@@ -151,7 +151,11 @@ class PycaretRobot:
         """
         [end] Hurst Statistics
         """
-        # filter
+        """
+        filter para desprezar as 10 primeiras linhas
+        - essas linhas terao os valores de hurst zerados
+        - durante os testes essas linhas estregaram o modelo
+        """
         df = df[df['h_value_variation'] != 0]
         print(f'>>> Feature Eng Saída={df.columns}\n')
         df.to_csv(self.temp_feat_filename, index=False)
@@ -197,9 +201,17 @@ class PycaretRobot:
         model = load_model(self.train_filename)
         #
         while self.check_execution():
+            """
+            capturando as ultimas ocorrencias
+            - realizo a previsao de todas as ultimas ocorrencias
+            - a ideia é ter mais de 10 linhas para capturar o hurst
+            - o trade leva em conta a ultima previsao
+            """
             last_ocurrencies = self.api.cripto_quotation()
             to_predict = self.feature_eng(last_ocurrencies)
             print(f'... Prevendo as ultimas {len(to_predict)} ocorrencias...')
             predictions = predict_model(model, data=to_predict)
-            predictions.to_csv(self.temp_pred_filename, index=False)            
+            # salvando arquivo temporario com as previsoes
+            predictions.to_csv(self.temp_pred_filename, index=False)
+            #
             self.await_next_iteraction()
