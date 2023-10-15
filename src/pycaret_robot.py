@@ -192,7 +192,7 @@ class PycaretRobot:
         #print(f"rounded_number={rounded_number}")
         return rounded_number
 
-    def execute(self, time: int):
+    def execute(self, time: int, trade_only_strong = False):
         self.setTime(time)
         print(f'\n>>> Realizando trades')
         # carregando o aprendizado do modelo
@@ -217,12 +217,20 @@ class PycaretRobot:
             last = predictions.iloc[-1]
             last_prediction = last['prediction_label']
             action = None
-            if 'positive' in last_prediction:
-                action = 'buy'
-            elif 'negative' in last_prediction:
-                action = 'sell'
-            else:
-                action = 'no_action'
+            if trade_only_strong:
+                if last_prediction == 'positive_strong':
+                    action = 'buy'
+                elif last_prediction == 'negative_strong':
+                    action = 'sell'
+                else:
+                    action = 'no_action'
+            else: 
+                if 'positive' in last_prediction:
+                    action = 'buy'
+                elif 'negative' in last_prediction:
+                    action = 'sell'
+                else:
+                    action = 'no_action'
             print(f'... last_prediction={last_prediction} -> ACTION= {action}')
             #
             value_in_trade = self.value_per_trade # !!!
