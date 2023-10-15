@@ -100,11 +100,9 @@ class PycaretRobot:
         df.drop(columns=['datetime'], inplace=True)
         """
         coeficients features
-        - razao entre o volume traded e disponivel
         - amplitude de variacao high-low
         - "candle" abstraido como a diferenca entre open-close
         """
-        df['traded_volume'] = df['number_of_trades'] / df['volume']
         df['amplitude'] = df['high'] - df['low']
         df['candle'] = df['close'] - df['open']
         #
@@ -125,14 +123,6 @@ class PycaretRobot:
                 h = self.calculate_hurst(lasts)
                 h_value_variation[r] = h
         df['h_value_variation'] = h_value_variation
-        #
-        h_traded_volume = np.zeros(rowsCount)
-        for r in range(rowsCount):
-            if (r >= 10):
-                lasts = df.loc[r-10:r, ['traded_volume']].copy()
-                h = self.calculate_hurst(lasts)
-                h_traded_volume[r] = h
-        df['h_traded_volume'] = h_traded_volume
         #
         h_amplitude = np.zeros(rowsCount)
         for r in range(rowsCount):
