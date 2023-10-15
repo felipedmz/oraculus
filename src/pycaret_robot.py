@@ -251,18 +251,15 @@ class PycaretRobot:
             else: 
                 max_qty_to_trade = 0
             #
-            if portfolio < 1:
-                print(f'>>> Sem fundos disponiveis -> SKIPPING')
-            else:
-                if action == 'buy' :
-                    # buy
-                    to_buy = qty_to_trade
-                    print(f'>>> Comprando {to_buy} BTC')
-                    self.api.buy(to_buy)
-                elif action == 'sell':
-                    # sell
-                    to_sell = min(qty_to_trade, max_qty_to_trade)
-                    print(f'>>> Vendendo {to_sell} BTC')
-                    self.api.sell(to_sell)
+            if action == 'buy' :
+                # buy
+                to_buy = qty_to_trade
+                print(f'>>> Comprando {to_buy} BTC')
+                self.api.buy(to_buy)
+            elif action == 'sell':
+                # sell
+                to_sell = max(qty_to_trade, max_qty_to_trade)
+                print(f'>>> Vendendo {to_sell} BTC')
+                self.api.sell(to_sell)
             #
             self.await_next_iteraction()
