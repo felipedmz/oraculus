@@ -97,7 +97,7 @@ class PycaretRobot:
         df['hour'] = df['datetime'].dt.strftime('%H')
         df['minute'] = df['datetime'].dt.strftime('%M')
         df['week_day'] = df['datetime'].dt.strftime('%A')
-        df.drop(columns=['datetime'], inplace=True)
+        df.drop(columns=['datetime', 'number_of_trades'], inplace=True)
         """
         coeficients features
         - amplitude de variacao high-low
@@ -161,6 +161,7 @@ class PycaretRobot:
         df = self.feature_eng(df)
         print(f'... debug de features salvo em = {self.temp_feat_filename}')
         # init setup
+        exit(1)
         print('... setup')
         exp = setup(
             data=df,
