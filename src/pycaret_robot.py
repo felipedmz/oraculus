@@ -161,7 +161,6 @@ class PycaretRobot:
         df = self.feature_eng(df)
         print(f'... debug de features salvo em = {self.temp_feat_filename}')
         # init setup
-        exit(1)
         print('... setup')
         exp = setup(
             data=df,
