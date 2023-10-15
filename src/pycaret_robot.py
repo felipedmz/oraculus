@@ -66,6 +66,7 @@ class PycaretRobot:
         
     def feature_eng(self, df):
         print(f'\n>>> Feature Eng Entrada={df.columns}')
+        df.reset_index(drop=True, inplace=True)
         rowsCount = len(df)
         #
         last_update = df['datetime'].max()
@@ -187,9 +188,9 @@ class PycaretRobot:
         
     def compute_quantity(self, coin_value, invest_value, significant_digits):
         a_number = invest_value/coin_value
-        rounded_number =  round(a_number, significant_digits - int(math.floor(math.log10(abs(a_number)))) - 1)
-        print(f"rounded_number={rounded_number}")
-        return float(rounded_number.iloc[0])
+        rounded_number = float(round(a_number, significant_digits - int(math.floor(math.log10(abs(a_number)))) - 1))
+        #print(f"rounded_number={rounded_number}")
+        return rounded_number
 
     def execute(self, time: int):
         self.setTime(time)
